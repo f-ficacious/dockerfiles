@@ -1,79 +1,36 @@
 ---
-version: "3.5"
+version: "3.1"
 services:
 
-### Routing
-
-#  gluetun:
-#    image: qmcgaw/gluetun:latest
-#    container_name: gluetun
-#    cap_add:
-#      - NET_ADMIN
-#    environment:
-#      - VPN_SERVICE_PROVIDER=private internet access
-#      - OPENVPN_USER="${VPNUSER:-vpn-username}"
-#      - OPENVPN_PASSWORD="${VPNPASS:-vpn-password}"
-#    #- SERVER_REGIONS=Switzerland
-#      - SERVER_REGIONS=${VPNREGION:-Netherlands}"
-#      - PORT_FORWARDING=off
-#      - FIREWALL_OUTBOUND_SUBNETS=172.29.1.0/24
-#      - HTTPPROXY=on
-#      - SHADOWSOCKS=on
-#      - SHADOWSOCKS_PASSWORD="${SHADOWPASS:-shadow-password}"
-#    volumes:
-#      - conf-gluetun:/gluetun
-#    ports:
-#      - 8888:8888/tcp # HTTP proxy
-#      - 8388:8388/tcp # Shadowsocks
-#      - 8388:8388/udp # Shadowsocks
-#      - 8001:8000/tcp # Built-in HTTP control server
-## other containers ports
-##      - 5076:5076     # hydra
-##      - 6595:6595     # deemix
-##      - 9117:9117     # jackett
-##      - 8000:8000     # pyload
-##      - 9666:9666     # pyload optional
-##      - 7878:7878     # radarr
-##      - 8080:8080     # sabnzbd
-##      - 8989:8989     # sonarr
-#    restart: "${RESTART:-unless-stopped}"
-#    networks:
-#      secured-br:
-#        ipv4_address: 172.28.1.2
-#        aliases:
-#          - gluetun
-
-### Searching
-
   jackett:
-  image: lscr.io/linuxserver/jackett:latest
+    image: lscr.io/linuxserver/jackett:latest
     container_name: jackett
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-jackett:/config
       - blackhole-torrent:/blackhole #optional for Torrents
     ports:
-      - 5076:5076
+      - 9117:9117
     networks:
       frontend-br:
         ipv4_address: 172.22.1.11
         aliases:
           - jackett
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   nzbhydra:
-  image: lscr.io/linuxserver/nzbhydra2:latest
+    image: lscr.io/linuxserver/nzbhydra2:latest
     container_name: nzbhydra
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-nzbhydra:/config
@@ -86,24 +43,26 @@ services:
         ipv4_address: 172.22.1.12
         aliases:
           - nzbhydra
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
-### Downloading
-
+#### Downloading
+#
   deemix:
-  image: registry.gitlab.com/bockiii/deemix-docker
-    container_name: Deemix
+    image: registry.gitlab.com/bockiii/deemix-docker
+    container_name: deemix
     volumes:
       - conf-deemix:/config
       - dls-deemix:/downloads
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - UMASK_SET="${UMASK:-022}"
+      - DEEMIX_SINGLE_USER=true
+      - IP=127.0.0.1
     ports:
       - 6595:6595
     networks:
@@ -111,21 +70,21 @@ services:
         ipv4_address: 172.22.1.21
         aliases:
           - deemix
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   pyload-ng:
-  image: lscr.io/linuxserver/pyload-ng:latest
+    image: lscr.io/linuxserver/pyload-ng:latest
     container_name: pyload-ng
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
-      - conf-pyload:/config
+      - conf-pyload-ng:/config
       - dls-misc:/downloads #optional
     ports:
       - 8000:8000
@@ -135,18 +94,18 @@ services:
         ipv4_address: 172.22.1.22
         aliases:
           - pyload-ng
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   sabnzbd:
-  image: lscr.io/linuxserver/sabnzbd:latest
+    image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-sabnzbd:/config
@@ -160,21 +119,21 @@ services:
         ipv4_address: 172.22.1.23
         aliases:
           - sabnzbd
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
-### ## Youtube-DL
+#### ## Youtube-DL
   ytdl-material:
-    image: tzahi12345/youtubedl-material:nightly
+    image: tzahi12345/youtubedl-material:latest
     container_name: ytdl-material
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
-      ALLOW_CONFIG_MUTATIONS: 'true'
-      ytdl_mongodb_connection_string: 'mongodb://ytdl-mongo-db:27017'
+      #- PUID="${PUID:-0}"
+      #- PGID="${PGID:-0}"
+      # ALLOW_CONFIG_MUTATIONS: 'true'
+      ytdl_mongodb_connection_string: 'mongodb://172.24.1.12:27017'
       ytdl_use_local_db: 'false'
       write_ytdl_config: 'true'
     volumes:
@@ -184,7 +143,7 @@ services:
       - dls-ytdl-audio:/app/audio
       - dls-ytdl-video:/app/video
     ports:
-      - 8998:17442
+      - 17442:17442
     networks:
       frontend-br:
         ipv4_address: 172.22.1.24
@@ -194,18 +153,18 @@ services:
         ipv4_address: 172.24.1.11
         aliases:
           - ytdl-material
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    depends_on:
+    #   - gluetun
       - ytdl-mongo-db
     restart: "${RESTART:-unless-stopped}"
 
   ytdl-mongo-db:
-    image: mongo
+    image: mongo:4.4.19
     container_name: ytdl-mongo-db
-    logging:
-      driver: "none"
+    #logging:
+      #driver: "none"
     volumes:
       - conf-ytdl-mongo-db:/data/db
     ports:
@@ -215,16 +174,17 @@ services:
         ipv4_address: 172.24.1.12
         aliases:
           - ytdl-mongo-db
+
     restart: "${RESTART:-unless-stopped}"
 
-### Organizing
-
+#### Organizing
+#
   beets:
-  image: lscr.io/linuxserver/beets:latest
+    image: lscr.io/linuxserver/beets:latest
     container_name: beets
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-beets:/config
@@ -234,24 +194,24 @@ services:
       - media-audiobooks:/audiobooks #optional
       - media-music:/music #optional
     ports:
-      - 8686:8686
+      - 8337:8337
     networks:
       frontend-br:
         ipv4_address: 172.22.1.31
         aliases:
           - beets
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   lidarr:
-  image: lscr.io/linuxserver/lidarr:latest
+    image: lscr.io/linuxserver/lidarr:latest
     container_name: lidarr
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-lidarr:/config
@@ -265,18 +225,18 @@ services:
         ipv4_address: 172.22.1.32
         aliases:
           - lidarr
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   radarr:
-  image: lscr.io/linuxserver/radarr:latest
+    image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-radarr:/config
@@ -289,18 +249,18 @@ services:
         ipv4_address: 172.22.1.33
         aliases:
           - radarr
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
   sonarr:
-  image: lscr.io/linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
-      - PUID=${PUID:-0}
-      - PGID=${PGID:-0}
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
       - TZ="${TZ:-Etc/UTC}"
     volumes:
       - conf-sonarr:/config
@@ -313,15 +273,16 @@ services:
         ipv4_address: 172.22.1.34
         aliases:
           - sonarr
-# When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-#   network_mode: "service:gluetun"
-#   depends_on:
-#     - gluetun
+    # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
+    # network_mode: "service:gluetun"
+    # depends_on:
+    #   - gluetun
     restart: "${RESTART:-unless-stopped}"
 
 
 networks:
   frontend-br:
+    name: frontend-br
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: frontend-br
@@ -334,6 +295,7 @@ networks:
         - subnet: fd4d:6169:6c63:6f77::/64
           gateway: fd4d:6169:6c63:6f77::1
   backend-br:
+    name: backend-br
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: backend-br
@@ -347,6 +309,7 @@ networks:
           gateway: fd4d:6169:6c63:6f88::1
 
   secured-br:
+    name: backend-br
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: secured-br
@@ -364,16 +327,16 @@ volumes:
 
 ### Temporary Data Storage
 
-  blackgole-nzb:
-    name: blackgole-nzb
+  blackhole-nzb:
+    name: blackhole-nzb
     driver: local
     driver_opts:
       type: none
       device: "${TEMPDATA_PATH:-/opt/temp}/blackhole/nzb"
       o: bind
 
-  blackgole-torrent:
-    name: blackgole-torrent
+  blackhole-torrent:
+    name: blackhole-torrent
     driver: local
     driver_opts:
       type: none
@@ -633,7 +596,7 @@ volumes:
       device: "${CONF_PATH:-/opt/appdata}/ytdl-users"
       o: bind
 
-  conf-ytdl-mong-db:
+  conf-ytdl-mongo-db:
     name: conf-ytdl-mong-db
     driver: local
     driver_opts:
