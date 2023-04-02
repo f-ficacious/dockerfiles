@@ -1,0 +1,67 @@
+## General Environment
+#
+# get your user id on linux/unix with `/bin/sh id`
+#
+# the user id that should be used to create all files and folders with for example 0 for root or 1000 for your user account
+#PUID=0
+#
+# the group id that should be used to create all files and folders with for example 0 for root or 1000 for your user group
+#PGID=0
+#
+#UMASK="022"
+#
+# time zone the server is in for example America/New_York for Eastern time
+#TZ="Etc/UTC"
+#
+# can be changed but usually a good idea to leave as default
+#RESTART="unless-stopped"
+#
+#
+#
+## Storage Paths
+# Don't add a slash at the end of the path!
+#
+# To store config data etc
+#CONF_PATH="/opt/appdata"
+#
+# data that is shared amongst several containers for example media files or a sync folder
+#DATA_PATH="/opt/data"
+#
+# data that is being create temporarily for example parts of downloads
+#TEMPDATA_PATH="/opt/tempdata"
+#
+#
+#
+### WINDOWS USER
+# uncomment and adjust the following options
+#
+#CONF_PATH="C:/Users/docker_user/docker/config"
+#
+#DATA_PATH="C:/Users/docker_user/docker/data"
+#
+#TEMPDATA_PATH="C:/Users/docker_user/docker/tempdata"
+#
+#
+## Gluetun Container
+#
+# choose a VPN service for example "mullvad" or "private internet access"
+#VPNSERVICE="private internet access"
+#
+#
+# Update one of the configs according to your VPN provider credentials and details
+### Private Internet Access Config
+#
+#VPNUSER="vpn-username"
+#
+#VPNPASS="vpn-password"
+#
+#VPNREGION="Netherlands"
+#
+### Wireguard / Mullvad Config
+#VPN_TYPE=wireguard
+#
+#WIREGUARD_PRIVATE_KEY="wireguard-key"
+#
+#WIREGUARD_ADDRESSES="10.64.222.21/32"
+#
+#SERVER_CITIES="Amsterdam"

@@ -1,6 +1,51 @@
 ---
-version: "3.1"
+version: "3.5"
 services:
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    environment:
+      ## Choose a config that works for you and comment out the other ones
+      ## Config for PIA
+      - VPN_SERVICE_PROVIDER=${VPNSERVICE:-private internet access}
+      - OPENVPN_USER=${VPNUSER:-vpn-username}
+      - OPENVPN_PASSWORD=${VPNPASS:-vpn-password}
+      - SERVER_REGIONS=${VPNREGION:-Netherlands}
+      ## Config for mullvad
+      #- VPN_TYPE=wireguard
+      #- WIREGUARD_PRIVATE_KEY=${WIREGUARDKEY:-some-kind-of-key}
+      #- WIREGUARD_ADDRESSES=${WIREGUARDADDRESSES:-10.64.222.21/32}
+      #- SERVER_CITIES=${VPNCITIES:-Amsterdam}
+      - PORT_FORWARDING=on
+      - FIREWALL_OUTBOUND_SUBNETS=172.29.1.0/24
+      - HTTPPROXY=on
+      - SHADOWSOCKS=off
+      - SHADOWSOCKS_PASSWORD="${SHADOWPASS:-shadow-password}"
+    volumes:
+      - conf-gluetun:/gluetun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8001:8000/tcp # Built-in HTTP control server
+# other containers ports
+#      - 6595:6595     # deemix
+#      - 5076:5076     # hydra
+#      - 9117:9117     # jackett
+#      - 8000:8000     # pyload
+#      - 9666:9666     # pyload optional
+#      - 7878:7878     # radarr
+#      - 8080:8080     # sabnzbd
+#      - 8989:8989     # sonarr
+    restart: "${RESTART:-unless-stopped}"
+    networks:
+      secured-br:
+        ipv4_address: 172.29.1.2
+        aliases:
+          - gluetun
 
   jackett:
     image: lscr.io/linuxserver/jackett:latest
@@ -16,7 +61,7 @@ services:
       - 9117:9117
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.11
+        ipv4_address: 172.23.1.11
         aliases:
           - jackett
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -40,7 +85,7 @@ services:
       - 5076:5076
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.12
+        ipv4_address: 172.23.1.12
         aliases:
           - nzbhydra
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -67,7 +112,7 @@ services:
       - 6595:6595
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.21
+        ipv4_address: 172.23.1.21
         aliases:
           - deemix
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -91,7 +136,7 @@ services:
       - 9666:9666
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.22
+        ipv4_address: 172.23.1.22
         aliases:
           - pyload-ng
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -112,17 +157,18 @@ services:
       - downloads:/downloads #optional
       - dls-incomplete:/incomplete-downloads #optional
       - blackhole-nzb:/blackhole
-    ports:
-      - 8080:8080
-    networks:
-      frontend-br:
-        ipv4_address: 172.22.1.23
-        aliases:
-          - sabnzbd
+
+    #ports:
+    #  - 8080:8080
+    #networks:
+    #  frontend-br:
+    #    ipv4_address: 172.23.1.23
+    #    aliases:
+    #      - sabnzbd
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
-    # network_mode: "service:gluetun"
-    # depends_on:
-    #   - gluetun
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     restart: "${RESTART:-unless-stopped}"
 
 #### ## Youtube-DL
@@ -146,7 +192,7 @@ services:
       - 17442:17442
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.24
+        ipv4_address: 172.23.1.24
         aliases:
           - ytdl-material
       backend-br:
@@ -197,7 +243,7 @@ services:
       - 8337:8337
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.31
+        ipv4_address: 172.23.1.31
         aliases:
           - beets
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -222,7 +268,7 @@ services:
       - 8686:8686
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.32
+        ipv4_address: 172.23.1.32
         aliases:
           - lidarr
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -246,7 +292,7 @@ services:
       - 7878:7878
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.33
+        ipv4_address: 172.23.1.33
         aliases:
           - radarr
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -270,7 +316,7 @@ services:
       - 8989:8989
     networks:
       frontend-br:
-        ipv4_address: 172.22.1.34
+        ipv4_address: 172.23.1.34
         aliases:
           - sonarr
     # When using routing through Gluetun Container use this and comment out the "PORTS" and "FRONTEND-BR" Section
@@ -290,8 +336,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.22.1.0/24
-          gateway: 172.22.1.1
+        - subnet: 172.23.1.0/24
+          gateway: 172.23.1.1
         - subnet: fd4d:6169:6c63:6f77::/64
           gateway: fd4d:6169:6c63:6f77::1
   backend-br:
@@ -309,18 +355,16 @@ networks:
           gateway: fd4d:6169:6c63:6f88::1
 
   secured-br:
-    name: backend-br
+    name: secured-br
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: secured-br
-    enable_ipv6: true
+    enable_ipv6: false
     ipam:
       driver: default
       config:
-        - subnet: 172.28.1.0/24
-          gateway: 172.28.1.1
-        - subnet: fd4d:6169:6c63:6f88::/64
-          gateway: fd4d:6169:6c63:6f88::1
+        - subnet: 172.29.1.0/24
+          gateway: 172.29.1.1
 
 
 volumes:
