@@ -1,0 +1,58 @@
+---
+version: "3.5"
+services:
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
+      - TZ="${TZ:-Etc/UTC}"
+      - SERVERURL=wireguard.banta.me #optional
+      - SERVERPORT=51820 #optional
+      - PEERS=1,2,3,4,5 #optional
+      - PEERDNS=auto #optional
+      - INTERNAL_SUBNET=172.23.5.0 #optional
+      - ALLOWEDIPS=0.0.0.0/0 #optional
+      - PERSISTENTKEEPALIVE_PEERS= #optional
+      - LOG_CONFS=true #optional
+    volumes:
+      - conf-wireguard:/config
+    ports:
+      - 51820:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      wireguard:
+        ipv4_address: 172.23.4.2
+        aliases:
+          - wireguard
+    restart: "${RESTART:-unless-stopped}"
+
+volumes:
+### Configs
+  conf-wireguard:
+    name: conf-wireguard
+    driver: local
+    driver_opts:
+      type: none
+      device: "${CONF_PATH:-/opt/appdata}/wireguard"
+      o: bind
+
+networks:
+  wireguard:
+    name: wireguard
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: wireguard
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.4.0/24
+          gateway: 172.23.4.1
+        - subnet: fd4d:6169:6c63:2c77::/64
+          gateway: fd4d:6169:6c63:2c77::1
