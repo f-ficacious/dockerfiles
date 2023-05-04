@@ -1,0 +1,99 @@
+---
+version: "3.5"
+services:
+
+  container_name:
+    image: image_url:latest
+    container_name: container_name
+    environment:
+      - PUID="${PUID:-0}"
+      - PGID="${PGID:-0}"
+      - TZ="${TZ:-Etc/UTC}"
+    volumes:
+      - conf-container_name:/config
+      - data-optional:/data #optional for Torrents
+      - temp-optional:/temp #optional for Torrents
+    ports:
+      - 80:80
+    networks:
+      frontend-br:
+        ipv4_address: 172.23.1.xx
+        aliases:
+          - container_name
+    restart: "${RESTART:-unless-stopped}"
+
+
+
+volumes:
+
+### Configs
+
+  conf-container_name:
+    name: conf-container_name
+    driver: local
+    driver_opts:
+      type: none
+      device: "${CONF_PATH:-/opt/appdata}/container_name"
+      o: bind
+
+
+### Data Files
+
+  data-optional:
+    name: data-optional
+    driver: local
+    driver_opts:
+      type: none
+      device: "${DATA_PATH:-/opt/data}/optional"
+      o: bind
+
+### Temp Files eg. temporary downloads
+
+  temp-optional:
+    name: temp-optional
+    driver: local
+    driver_opts:
+      type: none
+      device: "${TEMPDATA_PATH:-/opt/temp}/optional"
+      o: bind
+
+
+networks:
+  frontend-br:
+    name: frontend-br
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: frontend-br
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.1.0/24
+          gateway: 172.23.1.1
+        - subnet: fd4d:6169:6c63:6f77::/64
+          gateway: fd4d:6169:6c63:6f77::1
+  backend-br:
+    name: backend-br
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: backend-br
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.24.1.0/24
+          gateway: 172.24.1.1
+        - subnet: fd4d:6169:6c63:6f88::/64
+          gateway: fd4d:6169:6c63:6f88::1
+
+  secured-br:
+    name: secured-br
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: secured-br
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.1.0/24
+          gateway: 172.29.1.1
